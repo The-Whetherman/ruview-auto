@@ -1,0 +1,41 @@
+plugins {
+    id 'com.android.application'
+}
+
+configurations.all {
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+}
+
+android {
+    namespace 'com.whetherman.ruviewauto'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.whetherman.ruviewauto"
+        minSdk 28
+        targetSdk 34
+        versionCode 1
+        versionName "0.1-poc"
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'androidx.car.app:app:1.7.0'
+    implementation('androidx.car.app:app-projected:1.7.0') {
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+    }
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}
