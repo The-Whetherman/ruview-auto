@@ -19,9 +19,27 @@ android {
         versionName "0.1-poc"
     }
 
+    signingConfigs {
+        release {
+            def ksFile = file("/root/secrets/ruviewauto-release.keystore")
+            def ksPwFile = file("/root/secrets/ruviewauto-release.keystore.pw")
+            if (ksFile.exists() && ksPwFile.exists()) {
+                def ksPw = ksPwFile.text.trim()
+                storeFile ksFile
+                storePassword ksPw
+                keyAlias "ruviewauto"
+                keyPassword ksPw
+            }
+        }
+    }
+
     buildTypes {
         debug {
             debuggable true
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
         }
     }
 

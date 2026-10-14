@@ -19,7 +19,12 @@ simulator:
 - Boots free/legal PS2 homebrew (not commercial game ROMs) from
   [glampert/ps2-homebrew](https://github.com/glampert/ps2-homebrew) (MIT).
 
-Not yet tested on a real car head unit — see "The real-car gate" below.
+Not yet on a real car's app list — confirmed live (Oct 13-14 2026 session) it's
+hitting the exact Play Store ownership gate described below:
+`Finsky: PlayGearheadService com.whetherman.ruviewauto, app owners empty` →
+`CAR.VALIDATOR: Package DENIED; failed all other checks`. A signed release
+build is ready (see "Getting a real Play ownership record" below); next step
+is a Google Play Developer account + internal testing track.
 
 ## How it works
 
@@ -80,6 +85,48 @@ a real car is the hard part, not the rendering hack:
    real car needed. See `docs/dhu-setup.md` for the headless/cross-arch
    build notes (needed qemu-user tricks on an aarch64 host; trivial on an
    x86_64 machine).
+6. **Wireless (Bluetooth) Android Auto sessions hit the same gate as wired
+   ones** — confirmed live. Swapping USB cables or toggling Bluetooth
+   off/on does NOT reliably force Gearhead to re-scan the installed app
+   list (confirmed: zero log activity for this package after a BT toggle).
+   What DOES force a real rescan: `adb shell am force-stop
+   com.google.android.projection.gearhead` — this fully tears down and
+   restarts the whole Gearhead session (car screen goes blank, then
+   reconnects on its own), and the restart always re-runs the full
+   `CAR.VALIDATOR` scan.
+7. Also checked and ruled out as causes this session: the app being in a
+   Samsung "stopped"/frozen background state (it wasn't — but if yours is,
+   `adb shell dumpsys deviceidle whitelist +<pkg>` plus
+   `adb shell cmd appops set <pkg> RUN_IN_BACKGROUND allow` and
+   `RUN_ANY_IN_BACKGROUND allow` fixes that specific case), and Samsung's
+   "Secure Folder" showing as a second Android user (`pm list users`) —
+   that's an unrelated Knox container, not an Android Auto user profile.
+
+## Getting a real Play ownership record
+
+Two real fixes for the gate above:
+
+1. **Google Play Developer account ($25 one-time)** — upload to an
+   Internal or Closed testing track (no public review needed). This is
+   the path in progress as of this session.
+2. Shizuku-based sideload tricks — free, reported inconsistent on
+   Samsung phones specifically, unverified for this device.
+
+Release signing is already set up for path 1:
+
+- Release keystore: `/root/secrets/ruviewauto-release.keystore` (password
+  in the sibling `.pw` file, both outside the repo and outside git —
+  **back this keystore up somewhere durable**; losing it means you can
+  never ship an update to the same `applicationId` again).
+- `app/build.gradle` has a `release` signing config wired to that
+  keystore (falls back to unsigned if the keystore files aren't present,
+  so the build doesn't break on a machine without them).
+- Build command: `/opt/gradle/gradle-8.9/bin/gradle bundleRelease
+  --no-daemon` (no `gradlew` wrapper script in this repo yet — use the
+  system Gradle 8.9 install directly, matches the wrapper's pinned
+  version).
+- Output: `app/build/outputs/bundle/release/app-release.aab` — this is
+  what gets uploaded to Play Console's internal testing track.
 
 ## Credits
 
